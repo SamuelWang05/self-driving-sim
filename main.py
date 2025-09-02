@@ -10,6 +10,7 @@ CAR_HEIGHT = 60
 
 BORDER_COLOR = (255, 255, 255)
 
+pygame.init()
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Test")
 
@@ -18,15 +19,22 @@ mapImage = pygame.image.load("images/map_1.png").convert()
 mapImage = pygame.transform.scale(mapImage, (WINDOW_WIDTH, WINDOW_HEIGHT)) # Scales to fit window dimensions
 
 """Car settings"""
-carImage = pygame.image.load("images/car.png").convert_alpha() # alpha keeps transparency in png's
-carImage = pygame.transform.scale(carImage, (50, 35)) # scale car image
-carX = WINDOW_WIDTH // 2
-carY = WINDOW_HEIGHT // 2
-carAngle = 0
-carSpeed = 1
+class Car:
+    def __init__(self):
+        carImage = pygame.image.load("images/car.png").convert_alpha() # alpha keeps transparency in png's
+        self.carImage = pygame.transform.scale(carImage, (50, 35)) # scale car image
+        self.carX = WINDOW_WIDTH // 2
+        self.carY = WINDOW_HEIGHT // 2
+        self.carAngle = 0  # Current rotation angle in degrees
+        self.carSpeed = 2  
+        self.rotationSpeed = 3
+
+        self.alive = True # Did car crash?
 
 running = True
 clock = pygame.time.Clock()
+
+testCar = Car()
 
 while running:
     for event in pygame.event.get():
@@ -37,16 +45,38 @@ while running:
 
     keys = pygame.key.get_pressed()
 
-    if keys[pygame.K_RIGHT]:
-        carX += 0.1
-    if keys[pygame.K_LEFT]:
-        carX -= 0.1
-    if keys[pygame.K_UP]:
-        carY -= 0.1
-    if keys[pygame.K_DOWN]:
-        carY += 0.1
+    moving = False  # Handle rotation and movement
     
-    screen.blit(carImage, (carX, carY))
+    # Move forward in the direction the car is facing
+    if keys[pygame.K_UP]:
+        testCar.carX += testCar.carSpeed * math.cos(math.radians(testCar.carAngle))
+        testCar.carY += testCar.carSpeed * math.sin(math.radians(testCar.carAngle))
+        moving = True
+
+    # Move backward (reverse)
+    if keys[pygame.K_DOWN]:
+        testCar.carX -= testCar.carSpeed * math.cos(math.radians(testCar.carAngle))
+        testCar.carY -= testCar.carSpeed * math.sin(math.radians(testCar.carAngle))
+        moving = True
+    
+    if moving:
+        if keys[pygame.K_LEFT]:
+            testCar.carAngle -= testCar.rotationSpeed
+        if keys[pygame.K_RIGHT]:
+            testCar.carAngle += testCar.rotationSpeed
+    
+    testCar.carAngle = testCar.carAngle % 360 # Keep angle within 0-360 degrees
+    
+    rotatedCar = pygame.transform.rotate(testCar.carImage, -testCar.carAngle)  # Negative because pygame's coordinate system
+    
+    # Get the rect of the rotated image and center it on the car position
+    carRect = rotatedCar.get_rect()
+    carRect.center = (testCar.carX, testCar.carY)
+    
+    # Draw the rotated car
+    screen.blit(rotatedCar, carRect)
+    
     pygame.display.flip()
+    clock.tick(60)  # 60 FPS
 
 pygame.quit()
