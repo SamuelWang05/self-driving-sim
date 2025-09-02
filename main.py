@@ -8,7 +8,7 @@ WINDOW_HEIGHT = 1080 // 2
 CAR_WIDTH = 60
 CAR_HEIGHT = 60
 
-BORDER_COLOR = (255, 255, 255)
+BORDER_COLOR = (255, 255, 255, 255) 
 
 pygame.init()
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -24,7 +24,7 @@ class Car:
         carImage = pygame.image.load("images/car.png").convert_alpha() # alpha keeps transparency in png's
         self.carImage = pygame.transform.scale(carImage, (50, 35)) # scale car image
         self.carX = WINDOW_WIDTH // 2
-        self.carY = WINDOW_HEIGHT // 2
+        self.carY = WINDOW_HEIGHT - 50 # Random value to have car on track to start (map1)
         self.carAngle = 0  # Current rotation angle in degrees
         self.carSpeed = 2  
         self.rotationSpeed = 3
@@ -72,9 +72,15 @@ while running:
     # Get the rect of the rotated image and center it on the car position
     carRect = rotatedCar.get_rect()
     carRect.center = (testCar.carX, testCar.carY)
-    
-    # Draw the rotated car
-    screen.blit(rotatedCar, carRect)
+
+    # If center of car hits edge, it "dies"
+    if(screen.get_at((int(testCar.carX), int(testCar.carY))) == BORDER_COLOR):
+        testCar.alive = False
+
+    if (testCar.alive):
+        screen.blit(rotatedCar, carRect)
+    else:
+        pass
     
     pygame.display.flip()
     clock.tick(60)  # 60 FPS
